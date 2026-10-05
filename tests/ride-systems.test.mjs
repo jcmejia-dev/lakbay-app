@@ -71,3 +71,55 @@ test('weather requests deduplicate, cache and recover from failure; forecast use
     global.fetch=async()=>({ok:true,json:async()=>({fetchedAt:Date.now(),weather:[{current:{},hourly:{}}]})});await assert.rejects(fetchWeather('8,124'));
   }finally{global.fetch=original;}
 });
+const {destinationReducer,emptyDestination}=loadModule('../lib/destination.ts');
+const {routeEta,fastestRouteIndex}=loadModule('../lib/eta.ts');
+const {readRouteChoices,osrmAlternatives}=loadModule('../lib/routing.ts');
+const {RerouteGate}=loadModule('../lib/rerouting.ts');
+const {avatarUrl,profileInitials}=loadModule('../lib/profile.ts');
+test('destination cancellation clears routes and ignores late responses',()=>{
+ let state=destinationReducer(emptyDestination,{type:'plan',origin:{lat:6,lng:124},destination:{lat:6.1,lng:124}});
+ state=destinationReducer(state,{type:'ready',routes:[route,{...route,duration:800}],selected:1});
+ assert.equal(state.route.duration,800);
+ state=destinationReducer(state,{type:'clear'});assert.deepEqual(state,emptyDestination);
+ assert.deepEqual(destinationReducer(state,{type:'ready',routes:[route],selected:0}),emptyDestination);
+});
+test('ETA uses provider duration and fastest compares time rather than length',()=>{
+ assert.equal(fastestRouteIndex([route]),null);
+ assert.equal(fastestRouteIndex([route,{...route,distance:20000,duration:800}]),1);
+ assert.equal(routeEta(route,5500,60000).seconds,500);
+ assert.equal(routeEta(route,0,60000).arrival,60000);
+ assert.equal(routeEta({...route,duration:NaN},5500,0),null);
+ const options=[route,{...route,duration:800,coordinates:[[124,6],[124.05,6.1],[124.1,6]]}];
+ assert.equal(readRouteChoices({alternatives:[...options,route]}).length,2);
+ assert.equal(readRouteChoices(route).length,1);
+ const provider=r=>({distance:r.distance,duration:r.duration,geometry:{coordinates:r.coordinates},legs:[{steps:[]}]});
+ assert.equal(osrmAlternatives({code:'Ok',routes:[provider(route),provider(route)],waypoints:[]}).length,1);
+ assert.throws(()=>osrmAlternatives({code:'NoRoute',routes:[],waypoints:[]}));
+});
+test('rerouting rejects drift, stale fixes and repeat requests; confirms sustained deviation',()=>{
+ const gate=new RerouteGate(),point=t=>({lat:6,lng:124,t,accuracy:10});
+ assert.equal(gate.check({...point(1000),accuracy:60},300,1000,false),false);
+ assert.equal(gate.check(point(1000),300,1000,false),false);
+ assert.equal(gate.check(point(1000),300,9000,false),false);
+ assert.equal(gate.check(point(9000),300,9000,false),true);
+ assert.equal(gate.check(point(20000),300,20000,false),false);
+ assert.equal(gate.check(point(55000),300,55000,false),false);
+ assert.equal(gate.check(point(63000),300,63000,false),true);
+ gate.reset();assert.equal(gate.check(point(1000),300,30000,false),false);
+ assert.equal(gate.check(point(30000),100,30000,false),false);
+ assert.equal(gate.check(point(40000),300,40000,true),false);
+});
+test('profile identity and photo version are shared and cache-safe',()=>{
+ assert.equal(profileInitials(' Jane Ann '),'JA');assert.equal(profileInitials(' '),'R');
+ assert.equal(avatarUrl({displayName:'Jane'}),null);
+ assert.equal(avatarUrl({displayName:'Jane',photoVersion:'new photo'}),'/api/avatar?v=new%20photo');
+});
+loadModule.extensions['.tsx']=(module,file)=>module._compile(ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,jsx:ts.JsxEmit.ReactJSX}}).outputText,file);
+const {weatherState,default:WeatherIcon}=loadModule('../components/lakbay/weather-icon.tsx');
+const {renderToStaticMarkup}=loadModule('react-dom/server');
+test('weather conditions select distinct lightweight icons, including night and unavailable',()=>{
+ for(const [code,wind,precipitation,state] of [[0,2,0,'sunny'],[2,2,0,'partly-cloudy'],[3,2,0,'cloudy'],[61,2,1,'rainy'],[65,2,4,'heavy-rain'],[0,30,0,'windy'],[95,2,0,'thunderstorm'],[null,0,0,'unknown']])assert.equal(weatherState(code,wind,precipitation),state);
+ assert.match(renderToStaticMarkup(WeatherIcon({code:0,night:true})),/weather-moon/);
+ assert.match(renderToStaticMarkup(WeatherIcon({code:95})),/weather-lightning/);
+ const css=fs.readFileSync(new URL('../app/globals.css',import.meta.url),'utf8');assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
+});
