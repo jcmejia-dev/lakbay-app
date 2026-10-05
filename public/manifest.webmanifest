@@ -1,0 +1,17 @@
+{
+  "id": "/",
+  "name": "Lakbay — Your riding companion",
+  "short_name": "Lakbay",
+  "description": "Plan routes, record rides, find useful stops, and care for your motorcycle with Lakbay.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f5f7f4",
+  "theme_color": "#244f3f",
+  "icons": [
+    { "src": "/icons/lakbay-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/lakbay-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/lakbay-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

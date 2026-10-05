@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "site.chatgpt.zxcjcmejia.lakbay_ride_jc.twa",
+      "sha256_cert_fingerprints": [
+        "56:6B:05:FA:D6:73:26:E0:B9:C2:93:1E:6E:4C:63:84:17:EB:5F:96:78:2A:37:B2:C2:8A:46:7D:E6:C4:D6:3E"
+      ]
+    }
+  }
+]

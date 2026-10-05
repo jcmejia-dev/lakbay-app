@@ -1,0 +1,1 @@
+export default function Brand({className=''}:{className?:string}){return <span className={'lakbay-brand '+className}><img src="/images/lakbay-arrow.webp" width={40} height={34} alt=""/><span>lakbay<span className="lakbay-brand-dot">.</span></span></span>;}
