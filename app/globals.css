@@ -65,3 +65,24 @@
 .google-recovery-link{display:block;width:max-content;max-width:100%;margin:16px auto 0;color:var(--primary);font-size:14px;font-weight:600;text-align:center;text-decoration:underline;text-underline-offset:3px}.google-recovery-link:hover{opacity:.78}
 .auth-provider-form .field-label{margin:14px 0 0}.auth-provider-form h2{margin:8px 0}.auth-provider-form .auth-submit{margin-top:18px}.auth-divider{display:flex;align-items:center;gap:12px;margin:18px 0 14px;color:var(--muted-foreground);font-size:12px}.auth-divider::before,.auth-divider::after{content:"";height:1px;background:var(--border);flex:1}.auth-back{display:inline-flex;align-items:center;gap:6px;padding:4px 0;border:0;background:none;color:var(--muted-foreground);font:inherit;font-size:13px}.auth-back:hover,.auth-forgot:hover{text-decoration:underline}.text-button{border:0;background:transparent;color:var(--primary);font:inherit}.auth-forgot{display:block;margin:12px 0 0 auto;padding:4px 0;font-size:13px}.auth-password-hint{margin:8px 0 0!important;font-size:12px!important}.auth-notice{padding:10px 12px;border-radius:10px;background:var(--soft-surface);color:var(--foreground)!important;font-size:13px!important}
 @media(max-height:760px){.auth-page{justify-content:flex-start;padding-top:22px;padding-bottom:24px}}
+
+/* Shared panel motion. Radix Presence retains dialogs, sheets and menus through exit. */
+:root{--lakbay-motion-in:220ms;--lakbay-motion-out:180ms;--lakbay-motion-ease:cubic-bezier(.22,1,.36,1)}
+[data-slot$="-content"][data-state="open"]:not([data-slot="tabs-content"]),[data-slot$="-overlay"][data-state="open"]{animation-duration:var(--lakbay-motion-in)!important;animation-timing-function:var(--lakbay-motion-ease)!important}
+[data-slot$="-content"][data-state="closed"]:not([data-slot="tabs-content"]),[data-slot$="-overlay"][data-state="closed"]{animation-duration:var(--lakbay-motion-out)!important;animation-timing-function:var(--lakbay-motion-ease)!important;pointer-events:none}
+[data-slot="dialog-content"],[data-slot="alert-dialog-content"]{--tw-enter-translate-y:12px;--tw-exit-translate-y:12px;--tw-enter-scale:1;--tw-exit-scale:1}
+/* Individual translate preserves the existing centred sheet transform. */
+.ride-controls-sheet[data-state="open"],.map-info-sheet[data-state="open"]{animation:lakbay-sheet-in var(--lakbay-motion-in) var(--lakbay-motion-ease) both!important}
+.ride-controls-sheet[data-state="closed"],.map-info-sheet[data-state="closed"]{animation:lakbay-sheet-out var(--lakbay-motion-out) var(--lakbay-motion-ease) both!important}
+.lakbay-panel[data-motion="open"]{animation:lakbay-panel-in var(--lakbay-motion-in) var(--lakbay-motion-ease) both}
+.lakbay-panel[data-motion="closed"],.lakbay-splash[data-motion="closed"]{animation:lakbay-panel-out var(--lakbay-motion-out) var(--lakbay-motion-ease) both;pointer-events:none}
+.post-login-loader{position:fixed;inset:0;z-index:10001}
+@keyframes lakbay-panel-in{from{opacity:0;translate:0 12px}to{opacity:1;translate:0 0}}
+@keyframes lakbay-panel-out{from{opacity:1;translate:0 0}to{opacity:0;translate:0 12px}}
+@keyframes lakbay-sheet-in{from{opacity:0;translate:0 100%}to{opacity:1;translate:0 0}}
+@keyframes lakbay-sheet-out{from{opacity:1;translate:0 0}to{opacity:0;translate:0 100%}}
+@media(prefers-reduced-motion:reduce){.lakbay-panel,.lakbay-splash,.ride-controls-sheet[data-state],.map-info-sheet[data-state]{animation:none!important;translate:none!important}}
+
+.map-style-picker{border:0;padding:0;margin:18px 0}.map-style-picker legend{font-size:14px;font-weight:600;margin-bottom:10px}.map-style-picker>div{display:flex;gap:8px}.map-style-picker button{flex:1;min-height:44px;border:1px solid var(--border);border-radius:10px;background:var(--soft-surface);font-size:14px}.map-style-picker button[aria-pressed=true]{background:var(--primary);color:var(--primary-foreground)}
+
+.notification-update-action{padding:0 14px 16px 57px;border-bottom:1px solid var(--border)}.notification-update-action p{font-size:12px;line-height:1.5;color:var(--muted-foreground);margin-bottom:10px}.notification-update-action .dark-button{min-height:44px;font-size:14px}
