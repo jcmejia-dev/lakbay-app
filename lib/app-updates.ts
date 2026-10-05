@@ -3,6 +3,13 @@ import type {RideNotice} from '@/components/lakbay/notifications';
 // Add one entry with a unique, permanent ID when shipping a user-visible update.
 // Read status uses the existing account inbox, so reopening never duplicates a release.
 export const appUpdates: RideNotice[] = [{
+  id: 'update:2026-10-06-vercel',
+  title: 'Lakbay updated: ready for Vercel',
+  body: 'Lakbay now runs on standard Next.js with PostgreSQL storage. Your map, weather, routes, fuel estimates and profile features remain available. Tap Update app to reload the latest deployed web version.',
+  tab: 'ride',
+  time: Date.parse('2026-10-06T19:00:00+08:00'),
+  kind: 'update',
+}, {
   id: 'update:2026-10-06-job-2-v2',
   title: 'Lakbay updated: clearer navigation',
   body: 'Clear destinations, compare real route alternatives, view estimated arrival times and animated weather, and see your saved profile photo on your location pin. Automatic rerouting now checks accurate GPS fixes. Live traffic remains unavailable.',

@@ -1,8 +1,7 @@
-import {env} from 'cloudflare:workers';
 import {database} from '@/lib/storage';
 import {authSystemOwner,createSession,hashText,saveAuthRecord,cookieValue,sessionCookie} from '@/lib/account-auth';
 
-const config=()=>env as unknown as Record<string,string|undefined>;
+const config=()=>process.env;
 
 function failure(req:Request,reason:string){
   return Response.redirect(new URL('/?auth_error='+encodeURIComponent(reason),req.url),303);

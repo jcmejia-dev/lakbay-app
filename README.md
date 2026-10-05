@@ -1,61 +1,27 @@
 # Lakbay — Your riding companion
 
-Lakbay is a mobile-first motorcycle riding companion for everyday trips and longer rides. This repository is the app source of truth and is configured for Cloudflare Workers.
+Lakbay is a mobile-first motorcycle riding companion. This repository is the source of truth and now runs on standard Next.js with PostgreSQL storage, ready for Vercel.
 
-## App features
-
-- GPS ride recording, distance, elapsed time, ride history, and GPX export
-- Route planning with highlighted directions and saved trips
-- Nearby fuel stations and motorcycle shops/repair places on the map
-- Weather along the route
-- Email and Lakbay-password accounts with email verification and password recovery
-- Optional Google sign-in, rider profiles, and account-owned ride data
-- Badges, motorcycle garage, maintenance reminders, and notifications
-- Offline caching for saved routes and ride data, with sync when online
-- Installable PWA assets and animated Lakbay loading screen
-
-Ride recording needs location permission and an active app tab. Offline mode keeps saved information and queued changes; map tiles, fresh routes, weather, and first-time sign-in need internet access.
-
-## Stack
-
-- React 19, TypeScript, Next.js-compatible routes through Vinext
-- Cloudflare Workers and the Cloudflare Vite plugin
-- Cloudflare D1 for account data and Cloudflare R2 for profile photos
-- Leaflet and OpenStreetMap data
+Features include GPS ride recording/history/GPX export, route planning and alternatives, saved places/trips, nearby fuel and repair shops, estimated arrival/weather, vehicles/fuel estimates, arrival ratings, Google and verified email/password accounts, private profile photos, notifications, maintenance, existing badges and offline record queues. GPS recording needs permission and an active app tab; new map/weather/routes and authentication need internet.
 
 ## Run locally
 
-Requirements: Node.js `>=22.13.0`.
+Node.js >=22.13 is required. Copy .env.example to .env.local and set the server variables. Then:
 
 ```sh
 npm ci
+npm run db:migrate
 npm run dev
 ```
 
-The app expects Cloudflare bindings named `DB` and `AVATARS`. `wrangler.jsonc` contains the binding names; replace the sample D1 ID with your D1 database ID. Then create the local tables and start the app:
+Dev runs at http://localhost:5173. Build and serve with npm run build and npm start. Run npm test, npx tsc --noEmit and npm run lint for validation. Existing lint debt is reported in the conversion report.
 
-```sh
-npm run db:migrate:local
-npm run dev
-```
+## Vercel
 
-Build and preview the Worker locally:
+Import this repository with Framework Next.js, root ./, install npm install, and build npm run build. Leave Output Directory at its default. Follow [Vercel setup and safe D1/R2 migration](docs/VERCEL.md) for the exact environment variables, OAuth callback and database import instructions. Migrate existing data before cutover; do not point the new app at an empty database and assume Cloudflare records have moved.
 
-```sh
-npm run build
-npm start
-```
-
-## Cloudflare setup
-
-Create a Cloudflare Worker connected to this GitHub repository, create a D1 database named `lakbay-db` and an R2 bucket named `lakbay-avatars`, then bind them as `DB` and `AVATARS`. Set the D1 ID in `wrangler.jsonc` and apply the migrations with `npm run db:migrate:remote`. See [deployment and account setup](docs/ACCOUNT-SETUP.md) for OAuth and email settings.
-
-Never commit secrets. Google sign-in uses OAuth authorization code flow, with the callback generated from the configured app origin. Email/password account verification and password recovery need an email delivery provider; this project currently supports Resend.
-
-## Source note
-
-This repository is the source of truth for Lakbay development. Push changes to the configured GitHub branch to deploy through Cloudflare Workers.
+No Worker runtime or Wrangler is required. Original D1 migrations remain in drizzle/; PostgreSQL migrations are in db/postgres/. Small private avatar photos use the same PostgreSQL database. UI, maps, PWA assets and ride features are preserved.
 
 ## License
 
-No license has been added yet. Contact the project owner before reusing or redistributing this code.
+See the repository's license files.

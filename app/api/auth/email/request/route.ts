@@ -1,15 +1,14 @@
-import {env} from 'cloudflare:workers';
 import {database} from '@/lib/storage';
 import {authSystemOwner,hashText,saveAuthRecord} from '@/lib/account-auth';
 
 type Purpose='signup'|'reset';
-const config=()=>env as unknown as Record<string,string|undefined>;
+const config=()=>process.env;
 const validEmail=(email:string)=>email.length<=254&&/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
 export async function POST(req:Request){
   if(req.headers.get('origin')&&req.headers.get('origin')!==new URL(req.url).origin)return Response.json({error:'Invalid request origin.'},{status:403});
   const c=config();
-  if(!c.AUTH_SESSION_SECRET||!c.RESEND_API_KEY||!c.EMAIL_FROM)return Response.json({error:'Email verification is not configured. Set the Cloudflare email settings before enabling email accounts.'},{status:503});
+  if(!c.AUTH_SESSION_SECRET||!c.RESEND_API_KEY||!c.EMAIL_FROM)return Response.json({error:'Email verification is not configured. Set the server email settings before enabling email accounts.'},{status:503});
   try{
     const body=await req.json() as {email?:string;purpose?:Purpose};
     const email=String(body.email||'').trim().toLowerCase(),purpose=body.purpose;

@@ -1,5 +1,7 @@
 # Lakbay deployment and account setup
 
+Current main uses standard Next.js and PostgreSQL. Follow [Vercel setup](VERCEL.md) for deployment and migration. The Cloudflare instructions below are historical reference for the previous Worker deployment; its scripts/bindings are no longer available on main.
+
 ## 1. Connect the GitHub project to Cloudflare
 
 Use the Cloudflare Worker build connected to `potatolover-69/lakbay-app`. Set the build command to `npm run build` and the deploy command to `npx wrangler deploy --config dist/server/wrangler.json` (or use `npm run deploy` for a manual deployment). The app is a full-stack Worker, so it needs Workers rather than a static Pages-only deployment.

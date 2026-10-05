@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // Resolve this project independently of sibling/parent package lockfiles.
+  turbopack: {root: process.cwd()},
 };
 
 export default nextConfig;

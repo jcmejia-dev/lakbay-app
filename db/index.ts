@@ -1,13 +1,2 @@
-import { env } from "cloudflare:workers";
-import { drizzle } from "drizzle-orm/d1";
-import * as schema from "./schema";
-
-export function getDb() {
-  if (!env.DB) {
-    throw new Error(
-      "Cloudflare D1 binding `DB` is unavailable. Create the Lakbay D1 database and bind it as `DB` in wrangler.jsonc before using account storage."
-    );
-  }
-
-  return drizzle(env.DB, { schema });
-}
+// All application repositories share the same PostgreSQL adapter.
+export {database as getDb} from '../lib/storage';

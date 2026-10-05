@@ -1,6 +1,5 @@
-import {env} from 'cloudflare:workers';
 
-const config=()=>env as unknown as Record<string,string|undefined>;
+const config=()=>process.env;
 
 function redirectWithCookie(url:string,cookie:string){
   const headers=new Headers({Location:url});

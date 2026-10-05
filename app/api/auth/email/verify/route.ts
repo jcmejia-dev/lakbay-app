@@ -1,9 +1,8 @@
-import {env} from 'cloudflare:workers';
 import {database} from '@/lib/storage';
 import {authSystemOwner,createPasswordRecord,createSession,hashText,saveAuthRecord,sessionCookie} from '@/lib/account-auth';
 
 type Purpose='signup'|'reset';
-const config=()=>env as unknown as Record<string,string|undefined>;
+const config=()=>process.env;
 const validEmail=(email:string)=>email.length<=254&&/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 const validPassword=(password:string)=>password.length>=10&&password.length<=128;
 
