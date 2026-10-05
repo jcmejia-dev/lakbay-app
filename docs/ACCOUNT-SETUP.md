@@ -1,30 +1,35 @@
 # Lakbay account sign-in setup
 
-Lakbay uses Google OAuth for new sign-ins and account creation. Sign-in and sign-up use the same Google flow; Lakbay does not collect or store Google passwords. Password recovery is handled by Google at <https://accounts.google.com/signin/recovery>.
+Lakbay uses Google OAuth for account creation and sign-in. Both actions use the same Google flow. Lakbay does not collect or store Google passwords; password recovery is handled by Google.
 
 ## Google sign-in
 
 1. In Google Cloud Console, create an OAuth client with application type **Web application**.
-2. Add this authorized JavaScript origin:
+2. Add the origin of your deployed Lakbay app as an authorized JavaScript origin, for example:
 
-   `https://lakbay-ride-jc.zxcjcmejia.chatgpt.site`
+   `https://lakbay.example.com`
 
-3. Add this authorized redirect URI:
+3. Add this authorized redirect URI, replacing the host with your exact app domain:
 
-   `https://lakbay-ride-jc.zxcjcmejia.chatgpt.site/api/auth/google/callback`
+   `https://YOUR-LAKBAY-DOMAIN/api/auth/google/callback`
 
-4. Add `GOOGLE_CLIENT_ID` as a Site runtime variable and `GOOGLE_CLIENT_SECRET` as a private Site runtime secret.
+4. In the Cloudflare Worker settings for the Lakbay deployment, add `GOOGLE_CLIENT_ID` as a variable. Store `GOOGLE_CLIENT_SECRET` and `AUTH_SESSION_SECRET` as encrypted secrets.
+5. Set up the Worker bindings `DB` (Cloudflare D1) and `AVATARS` (Cloudflare R2).
+
+The origin and callback host must match the domain people use to open Lakbay. Do not use a development or preview hostname for production sign-in.
+
+Google password recovery: <https://accounts.google.com/signin/recovery>
 
 ## Session secret
 
-Add `AUTH_SESSION_SECRET` as a private Site runtime secret. Generate a random value with at least 32 bytes of entropy, for example:
+Generate a random value with at least 32 bytes of entropy, then store it as the Cloudflare Worker secret `AUTH_SESSION_SECRET`:
 
 ```sh
 openssl rand -base64 32
 ```
 
-Never commit these values to the source repository or paste them into public messages. Enter them only in the Site's secret settings. After setting the variables, deploy the latest saved Site version again so the Worker receives the new environment revision.
+Never commit this value or paste it into public messages. After changing Worker variables or secrets, redeploy the Worker so it receives the new configuration.
 
 ## Offline behavior
 
-Ride records, saved places, saved route geometry, and turn instructions are cached in IndexedDB under the signed-in account key. Changes made while the app is online sync to D1; saves made after the connection drops queue locally and sync on reconnection. Offline routing can show a route saved earlier, but the current OpenStreetMap tile source does not provide offline map downloads. A fresh sign-in still requires an internet connection.
+Ride records, saved places, saved route geometry, and turn instructions are cached in IndexedDB under the signed-in account key. Changes made while online sync to D1; saves made after connectivity drops queue locally and sync when the connection returns. Offline routing can show a route saved earlier, but map tiles are not available offline. Signing in for the first time requires an internet connection.
