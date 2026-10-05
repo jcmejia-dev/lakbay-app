@@ -5,8 +5,8 @@ import {explore,Location,Poi} from '@/lib/navigation';
 type Area={places:Poi[];center:Location;updatedAt:number;source:string};
 // Match the server's shared cache cells; GPS jitter must not restart searches.
 export function areaKey(p:Location){return `${Math.round(p.lat*20)/20},${Math.round(p.lng*20)/20}`;}
-export function useNearby(center:Location,position:Location|null,destination:Location|null){
- const keys=[...new Set([center,position,destination].filter((p):p is Location=>!!p).map(areaKey))].join(';');
+export function useNearby(center:Location,position:Location|null,destination:Location|null,routeAreas:Location[]=[]){
+ const keys=[...new Set([position,destination,...routeAreas,center].filter((p):p is Location=>!!p).map(areaKey))].slice(0,6).join(';');
  const cache=useRef(new Map<string,Area>()),pending=useRef(new Map<string,Promise<Area>>());
  const [areas,setAreas]=useState<Area[]>([]),[busy,setBusy]=useState(false),[error,setError]=useState(''),[retry,setRetry]=useState(0);
  useEffect(()=>{
