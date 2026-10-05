@@ -1,59 +1,60 @@
 # Lakbay — Your riding companion
 
-Lakbay is a mobile-first motorcycle riding companion for everyday trips and longer rides. It is built around a full-screen map and a calm, minimal interface.
+Lakbay is a mobile-first motorcycle riding companion for everyday trips and longer rides. This repository is the app source of truth and is configured for Cloudflare Workers.
 
-## What is included
+## App features
 
-- GPS ride recording with distance, elapsed time, route history, and GPX export
-- Route planning with a highlighted route line, turn guidance, saved trips, and a travel album
-- Nearby fuel stations and shops/repair places shown with distinct map icons
-- Weather and nearby information, placed in dedicated controls to keep the map readable
-- Google sign-in, rider profile customization, and per-account ride data
-- Ride badges, motorcycle garage, odometer estimate, and maintenance reminders
-- Offline caching for saved rides, places, routes, and turn instructions, with queued sync when connectivity returns
-- Lakbay logo reveal, animated loading wheel, notification center, theme/map preferences, and installable PWA assets
+- GPS ride recording, distance, elapsed time, ride history, and GPX export
+- Route planning with highlighted directions and saved trips
+- Nearby fuel stations and motorcycle shops/repair places on the map
+- Weather along the route
+- Email and Lakbay-password accounts with email verification and password recovery
+- Optional Google sign-in, rider profiles, and account-owned ride data
+- Badges, motorcycle garage, maintenance reminders, and notifications
+- Offline caching for saved routes and ride data, with sync when online
+- Installable PWA assets and animated Lakbay loading screen
 
-Keep the app open and the screen awake while recording. If the app goes offline, saved ride and place data can queue for sync; map tiles and first-time sign-in still need internet access.
+Ride recording needs location permission and an active app tab. Offline mode keeps saved information and queued changes; map tiles, fresh routes, weather, and first-time sign-in need internet access.
 
 ## Stack
 
-- Next.js-compatible app running through Vinext
-- React 19 and TypeScript
-- Cloudflare Workers with D1 for account-owned records and R2 for profile avatars
-- Leaflet maps with OpenStreetMap data
-- PWA manifest, service worker, and Android asset links
+- React 19, TypeScript, Next.js-compatible routes through Vinext
+- Cloudflare Workers and the Cloudflare Vite plugin
+- Cloudflare D1 for account data and Cloudflare R2 for profile photos
+- Leaflet and OpenStreetMap data
 
 ## Run locally
 
-Requirements: Node.js 22.13 or newer.
+Requirements: Node.js `>=22.13.0`.
 
 ```sh
 npm ci
 npm run dev
 ```
 
-Open the local URL printed by the dev server. To make a production build:
+The app expects Cloudflare bindings named `DB` and `AVATARS`. `wrangler.jsonc` contains the binding names; replace the sample D1 ID with your D1 database ID. Then create the local tables and start the app:
+
+```sh
+npm run db:migrate:local
+npm run dev
+```
+
+Build and preview the Worker locally:
 
 ```sh
 npm run build
-npm run start
+npm start
 ```
 
-The Worker expects Cloudflare bindings named `DB` (D1) and `AVATARS` (R2). Set these up in the Cloudflare Worker configuration for a deployed environment.
+## Cloudflare setup
 
-## Google sign-in setup
+Create a Cloudflare Worker connected to this GitHub repository, create a D1 database named `lakbay-db` and an R2 bucket named `lakbay-avatars`, then bind them as `DB` and `AVATARS`. Set the D1 ID in `wrangler.jsonc` and apply the migrations with `npm run db:migrate:remote`. See [deployment and account setup](docs/ACCOUNT-SETUP.md) for OAuth and email settings.
 
-Create a Google OAuth client of type **Web application**. Set the authorized JavaScript origin to your deployed Lakbay origin, for example `https://lakbay.example.com`. Set the redirect URI to:
+Never commit secrets. Google sign-in uses OAuth authorization code flow, with the callback generated from the configured app origin. Email/password account verification and password recovery need an email delivery provider; this project currently supports Resend.
 
-```
-https://YOUR-LAKBAY-DOMAIN/api/auth/google/callback
-```
+## Source note
 
-Use that exact deployed host for both Google OAuth settings. In Cloudflare Worker settings, add `GOOGLE_CLIENT_ID` as a variable and store `GOOGLE_CLIENT_SECRET` and `AUTH_SESSION_SECRET` as secrets. See [Google account setup](docs/ACCOUNT-SETUP.md). Never commit secret values.
-
-## Project source note
-
-This GitHub import uses the latest complete source checkout available in this workspace: Lakbay Site source version 14, commit `f4cef008eccdd0b9ed245fa8f984ddeafa544764`. The live Site reports version 17, but versions 15–17 were not present in the available source checkout, so this repository has not been verified as a byte-for-byte copy of the live version. The imported source builds successfully with `npm run build`.
+This repository is the source of truth for Lakbay development. Push changes to the configured GitHub branch to deploy through Cloudflare Workers.
 
 ## License
 
