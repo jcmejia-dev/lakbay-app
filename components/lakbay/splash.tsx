@@ -3,20 +3,12 @@
 import { useEffect, useState } from 'react';
 import {playLakbayReveal} from '@/lib/launch-sound';
 
-const FIRST_LAUNCH_KEY = 'lakbay-welcome-seen-v1';
-
 export default function Splash({ children }: { children: React.ReactNode }) {
   const [phase, setPhase] = useState<'checking' | 'brand' | 'closing' | 'ready'>('checking');
   const active = phase !== 'ready';
   useEffect(() => {
-    try {
-      if (localStorage.getItem(FIRST_LAUNCH_KEY) === 'seen') {
-        // Read device storage after hydration without flashing the welcome.
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setPhase('ready');
-        return;
-      }
-    } catch { /* Storage can be blocked; still allow the app to open. */ }
+    // Replay the brand reveal on every cold launch, not tab visibility changes.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setPhase('brand');
     let played = false;
     const play = () => { if (!played) played = playLakbayReveal(); };
@@ -25,8 +17,6 @@ export default function Splash({ children }: { children: React.ReactNode }) {
     window.addEventListener('keydown', play, {once:true});
     const duration = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 250 : 1900;
     const reveal = window.setTimeout(() => {
-      // Only mark the welcome seen after its successful display; logout keeps this key.
-      try { localStorage.setItem(FIRST_LAUNCH_KEY, 'seen'); } catch { /* Best effort. */ }
       setPhase('closing');
     }, duration);
     const finish = window.setTimeout(() => setPhase('ready'), duration + 180);

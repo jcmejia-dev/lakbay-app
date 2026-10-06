@@ -1,7 +1,12 @@
 import {workerRequest} from '../pwa/messages';
 import type {InboxState,RideNotice} from './types';
 export type NotificationSnapshot={items:RideNotice[];state:InboxState;unreadCount:number};
-export async function setBadge(count:number){const n=navigator as Navigator&{setAppBadge?:(count:number)=>Promise<void>;clearAppBadge?:()=>Promise<void>};try{if(count>0)await n.setAppBadge?.(count);else await n.clearAppBadge?.();navigator.serviceWorker?.controller?.postMessage({type:'SET_BADGE',count});}catch{}}
+export async function setBadge(count:number,read:string[]=[]){
+  const n=navigator as Navigator&{setAppBadge?:(count:number)=>Promise<void>;clearAppBadge?:()=>Promise<void>};
+  try{if(count>0)await n.setAppBadge?.(count);else await n.clearAppBadge?.();}catch{}
+  // A denied window badge must not prevent worker/dot synchronization.
+  try{const worker=navigator.serviceWorker?.controller||(await navigator.serviceWorker?.getRegistration('/'))?.active;worker?.postMessage({type:'SET_BADGE',count,read});}catch{}
+}
 export async function registerWorker(){if(!('serviceWorker' in navigator))throw Error('Phone alerts are not supported in this browser.');return navigator.serviceWorker.register('/notifications-sw.js',{scope:'/',updateViaCache:'none'});}
 function publicKey(value:string){const raw=atob(value.replace(/-/g,'+').replace(/_/g,'/'));return Uint8Array.from(raw,c=>c.charCodeAt(0));}
 export async function enablePhoneAlerts(requestPermission:boolean){

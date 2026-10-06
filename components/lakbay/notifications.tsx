@@ -18,7 +18,7 @@ export default function Notifications({items:legacy,state,onChange,onNavigate,re
   const items=orderedNotices([...legacy.filter(n=>n.time>0),...saved]);
   const unread=items.filter(n=>!state.read.includes(n.id));const latest=items.find(n=>n.kind==='update');
   const current=useRef({state,onChange,onNavigate});useEffect(()=>{current.current={state,onChange,onNavigate};},[state,onChange,onNavigate]);
-  useEffect(()=>{if(ready)setBadge(unread.length);},[ready,unread.length]);
+  useEffect(()=>{if(ready)setBadge(unread.length,state.read);},[ready,unread.length,state.read]);
   async function mark(ids:string[]){const next={...current.current.state,read:mergeRead(current.current.state.read,ids)};try{await current.current.onChange(next);}catch{toast.error('Read status could not be saved. Please retry.');}}
   useEffect(()=>{if(!ready)return;const navigate=(id:string,tab:string)=>{if(!notificationTabs.has(tab))return;if(id)mark([id]);if(tab==='notifications')setOpen(true);else{setOpen(false);current.current.onNavigate(tab);}refresh();};const message=(event:MessageEvent)=>{if(event.data?.type==='OPEN_NOTIFICATION')navigate(event.data.id,event.data.tab);};navigator.serviceWorker?.addEventListener('message',message);
     const url=new URL(window.location.href),tab=url.searchParams.get('view'),id=url.searchParams.get('notification');if(tab&&notificationTabs.has(tab)){navigate(id||'',tab);url.searchParams.delete('view');url.searchParams.delete('notification');window.history.replaceState(null,'',url);}

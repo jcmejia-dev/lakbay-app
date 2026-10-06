@@ -20,7 +20,7 @@ self.addEventListener('fetch',event=>{
 self.addEventListener('message',event=>{
   const data=event.data||{};
   if(data.type==='GET_VERSION'){event.ports[0]?.postMessage({version:BUILD_ID});return;}
-  if(data.type==='SET_BADGE'){event.waitUntil(badge(Math.max(0,Math.min(1000,Number(data.count)||0))));return;}
+  if(data.type==='SET_BADGE'){event.waitUntil((async()=>{await badge(Math.max(0,Math.min(1000,Number(data.count)||0)));const read=new Set(Array.isArray(data.read)?data.read.filter(id=>typeof id==='string'&&id.length<=250).slice(-1000):[]);try{for(const notification of await self.registration.getNotifications())if(read.has(notification.tag))notification.close();}catch{}})());return;}
   if(data.type==='UPDATE_READY'){const pending=preparations.get(data.requestId);if(pending&&event.source?.id)pending.answers.set(event.source.id,data.safe===true);return;}
   if(data.type==='ACTIVATE_UPDATE')event.waitUntil((async()=>{
     const clients=await windows(),requestId=crypto.randomUUID(),answers=new Map();preparations.set(requestId,{answers});
@@ -34,7 +34,8 @@ self.addEventListener('push',event=>event.waitUntil((async()=>{
   let data;try{data=event.data.json();}catch{return;}
   if(typeof data.id!=='string'||data.id.length>250||typeof data.title!=='string')return;
   const tab=TABS.has(data.tab)?data.tab:'notifications';
-  await self.registration.showNotification(data.title.slice(0,180),{body:String(data.body||'').slice(0,500),tag:data.id,icon:'/icons/lakbay-192.png',badge:'/icons/lakbay-192.png',data:{id:data.id,tab},renotify:false});
+  const title=data.title.replace(/https?:\/\/\S+/gi,'').trim();const body=String(data.body||'').replace(/https?:\/\/\S+/gi,'').trim();
+  await self.registration.showNotification(/^Lakbay\b/i.test(title)?title.slice(0,180):('Lakbay · '+title).slice(0,180),{body:body.slice(0,500),tag:data.id,icon:'/icons/lakbay-192.png',badge:'/icons/lakbay-192.png',data:{id:data.id,tab},renotify:false});
   let count=Math.max(0,Number(data.unreadCount)||0);
   try{const r=await fetch('/api/notifications',{credentials:'include',cache:'no-store'});if(r.ok)count=(await r.json()).unreadCount;}catch{}
   await badge(count);await broadcast({type:'LAKBAY_PUSH',id:data.id});

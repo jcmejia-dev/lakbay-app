@@ -39,7 +39,7 @@ function workerHarness(){
 }
 test('worker shows one logical push, updates badge, safely opens the requested section',async()=>{
   const h=workerHarness();await h.emit('push',{data:{json:()=>({...notice('achievement:first-ride',1),unreadCount:52})}});
-  assert.equal(h.shown.length,1);assert.equal(h.shown[0][1].tag,'achievement:first-ride');assert.equal(h.shown[0][1].renotify,false);assert.deepEqual(h.badges,[0]);assert.equal(h.messages[0].type,'LAKBAY_PUSH');
+  assert.equal(h.shown.length,1);assert.equal(h.shown[0][0],'Lakbay · Safe milestone');assert.equal(h.shown[0][1].tag,'achievement:first-ride');assert.equal(h.shown[0][1].renotify,false);assert.deepEqual(h.badges,[0]);assert.equal(h.messages[0].type,'LAKBAY_PUSH');
   let closed=false;await h.emit('notificationclick',{notification:{close:()=>closed=true,data:{id:'achievement:first-ride',tab:'badges',url:'https://evil.test/'}}});assert.ok(closed);assert.equal(h.opened,'');assert.equal(h.messages.at(-1).tab,'badges');assert.deepEqual(JSON.parse(h.fetchCalls.at(-1).options.body),{read:['achievement:first-ride']});
   h.context.self.clients.matchAll=async()=>[];await h.emit('notificationclick',{notification:{close:()=>{},data:{id:'x',tab:'https://evil.test/'}}});assert.equal(h.opened,'/?view=notifications&notification=x');
   await h.emit('message',{data:{type:'SET_BADGE',count:52}});await h.emit('message',{data:{type:'SET_BADGE',count:0}});assert.deepEqual(h.badges.slice(-2),[52,0]);
@@ -118,4 +118,11 @@ test('explicit enable stores a PushManager subscription; waiting legacy updates 
   Object.defineProperty(global,'navigator',{configurable:true,value:{serviceWorker:{register:async(url,options)=>{assert.equal(url,'/notifications-sw.js');assert.equal(options.updateViaCache,'none');return registration;},ready:Promise.resolve(registration),getRegistration:async()=>registration}}});
   global.fetch=async(url,options)=>{calls.push({url,options});return Response.json(url==='/api/push/config'?{configured:true,publicKey:key}:{ok:true});};
   try{await enablePhoneAlerts(true);assert.equal(calls.at(-1).url,'/api/push/subscriptions');assert.equal(JSON.parse(calls.at(-1).options.body).endpoint,subscription.endpoint);registration.pushManager.getSubscription=async()=>subscription;await disablePhoneAlerts();assert.equal(calls.at(-1).options.method,'DELETE');assert.equal(unsubscribed,1);registration.waiting={};await assert.rejects(enablePhoneAlerts(false),/Update app/);}finally{global.window=originalWindow;global.Notification=originalNotification;global.fetch=originalFetch;Object.defineProperty(global,'navigator',originalNavigator);}
+});
+
+test('read-state badge sync closes only read system alerts; Lakbay content excludes links',async()=>{
+  const h=workerHarness(),closed=[];h.context.self.registration.getNotifications=async()=>[{tag:'read',close:()=>closed.push('read')},{tag:'unread',close:()=>closed.push('unread')}];
+  await h.emit('message',{data:{type:'SET_BADGE',count:1,read:['read']}});assert.deepEqual(closed,['read']);assert.equal(h.badges.at(-1),1);
+  await h.emit('push',{data:{json:()=>({...notice('clean',1),title:'Update https://example.vercel.app',body:'Ready https://example.vercel.app/path',unreadCount:1})}});
+  assert.equal(h.shown.at(-1)[0],'Lakbay · Update');assert.equal(h.shown.at(-1)[1].body,'Ready');
 });
