@@ -1,0 +1,9 @@
+import {notificationAccess} from '@/lib/notifications/access';
+import {inboxState,readNotices,reconcileNotifications} from '@/lib/notifications/repository';
+import {mergeRead,unreadCount} from '@/lib/notifications/types';
+import {transaction} from '@/lib/storage';
+import {deliverPending} from '@/lib/notifications/push';
+import {after} from 'next/server';
+import {z} from 'zod';
+export async function GET(req:Request){try{const owner=await notificationAccess(req);if(owner instanceof Response)return owner;const result=await transaction(owner,async db=>{await reconcileNotifications(db,owner);const items=await readNotices(db,owner),state=await inboxState(db,owner);return {items,state,unreadCount:unreadCount(items,state.read)};});after(()=>deliverPending().catch(()=>{}));return Response.json(result,{headers:{'Cache-Control':'no-store'}});}catch{return Response.json({error:'Inbox unavailable. Saved notifications remain on this device.'},{status:503});}}
+export async function POST(req:Request){try{const owner=await notificationAccess(req,true);if(owner instanceof Response)return owner;const raw=await req.text();if(raw.length>260000)return Response.json({error:'Request too large.'},{status:413});const {read}=z.object({read:z.array(z.string().max(250)).max(1000)}).parse(JSON.parse(raw));const result=await transaction(owner,async db=>{const state=await inboxState(db,owner);state.read=mergeRead(state.read,read);await db.prepare("INSERT INTO records(owner,id,kind,data,updated) VALUES(?,'inbox','inbox',?,?) ON CONFLICT(owner,id) DO UPDATE SET data=excluded.data,updated=excluded.updated").bind(owner,JSON.stringify(state),new Date().toISOString()).run();return {state,unreadCount:unreadCount(await readNotices(db,owner),state.read)};});return Response.json(result,{headers:{'Cache-Control':'no-store'}});}catch(error){return Response.json({error:'Could not save read state.'},{status:error instanceof z.ZodError||error instanceof SyntaxError?400:503});}}

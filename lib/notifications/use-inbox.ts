@@ -1,0 +1,12 @@
+'use client';
+import {useEffect,useRef,useState,useCallback} from 'react';
+import {orderedNotices,mergeRead,type RideNotice,type InboxState} from './types';
+import type {NotificationSnapshot} from './client';
+import {enablePhoneAlerts} from './client';
+export function useInbox(owner:string,state:InboxState,onChange:(next:InboxState)=>Promise<void>){
+  const [snapshot,setSnapshot]=useState<{owner:string;items:RideNotice[]}>({owner:'',items:[]});const latest=useRef({state,onChange});useEffect(()=>{latest.current={state,onChange};},[state,onChange]);const inflight=useRef(false);
+  const refresh=useCallback(async()=>{if(!owner||inflight.current)return;inflight.current=true;try{const response=await fetch('/api/notifications',{cache:'no-store'});if(!response.ok)return;const data=await response.json() as NotificationSnapshot;setSnapshot({owner,items:orderedNotices(data.items)});try{localStorage.setItem('lakbay:inbox:'+owner,JSON.stringify(orderedNotices(data.items)));}catch{}const next={...latest.current.state,read:mergeRead(latest.current.state.read,data.state.read)};if(next.read.length!==latest.current.state.read.length)await latest.current.onChange(next);}catch{}finally{inflight.current=false;}},[owner]);
+  useEffect(()=>{if(!owner)return;let disposed=false;const cached=Promise.resolve().then(()=>{try{const items=orderedNotices(JSON.parse(localStorage.getItem('lakbay:inbox:'+owner)||'[]'));if(!disposed)setSnapshot({owner,items});}catch{}});cached.then(refresh);const handler=()=>refresh();const timer=setInterval(()=>{if(document.visibilityState==='visible')refresh();},60000);window.addEventListener('online',handler);window.addEventListener('lakbay:records-synced',handler);window.addEventListener('lakbay:refresh-notifications',handler);const message=(e:MessageEvent)=>{if(['LAKBAY_PUSH','LAKBAY_PUSH_RECOVERY'].includes(e.data?.type))refresh();};navigator.serviceWorker?.addEventListener('message',message);return()=>{disposed=true;clearInterval(timer);window.removeEventListener('online',handler);window.removeEventListener('lakbay:records-synced',handler);window.removeEventListener('lakbay:refresh-notifications',handler);navigator.serviceWorker?.removeEventListener('message',message);};},[owner,refresh]);
+  useEffect(()=>{if(!owner||!state.browser||!('Notification' in window)||Notification.permission!=='granted')return;enablePhoneAlerts(false).catch(()=>{});},[owner,state.browser]);
+  return {items:snapshot.owner===owner?snapshot.items:[],refresh};
+}

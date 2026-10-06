@@ -14,10 +14,16 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "node --env-file-if-exists=.env.local scripts/migrate-postgres.mjs",
     "db:import": "node --env-file-if-exists=.env.local scripts/import-d1.mjs",
-    "test": "npm run test:ride-systems && node --test tests/vercel-storage.test.mjs && npm run test:job3",
+    "test": "npm run test:ride-systems && node --test tests/vercel-storage.test.mjs && npm run test:job3 && npm run test:notifications",
     "db:import-avatars": "node --env-file-if-exists=.env.local scripts/import-avatars.mjs",
     "typecheck": "tsc --noEmit",
-    "test:job3": "node --test tests/progression.test.mjs tests/ridey.test.mjs"
+    "test:job3": "node --test tests/progression.test.mjs tests/ridey.test.mjs",
+    "prebuild": "node scripts/generate-release.mjs",
+    "predev": "node scripts/generate-release.mjs",
+    "pretypecheck": "node scripts/generate-release.mjs",
+    "test:notifications": "node scripts/generate-release.mjs && node --test tests/notifications.test.mjs",
+    "pretest": "node scripts/generate-release.mjs",
+    "push:keys": "node scripts/generate-vapid.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
@@ -44,6 +50,7 @@
     "sonner": "^2.0.8",
     "tailwind-merge": "3.6.0",
     "vaul": "^1.1.2",
+    "web-push": "^3.6.7",
     "zod": "^3.25.76"
   },
   "devDependencies": {
@@ -53,6 +60,7 @@
     "@types/pg": "^8.23.1",
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
+    "@types/web-push": "^3.6.4",
     "drizzle-kit": "0.31.10",
     "eslint": "9.39.4",
     "eslint-config-next": "16.3.4",

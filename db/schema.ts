@@ -1,4 +1,4 @@
-import {pgTable,text,primaryKey,customType,integer,boolean} from 'drizzle-orm/pg-core';
+import {pgTable,text,primaryKey,customType,integer,boolean,bigint,foreignKey} from 'drizzle-orm/pg-core';
 const bytea=customType<{data:Buffer}>({dataType:()=> 'bytea'});
 export const records=pgTable('records',{owner:text('owner').notNull(),id:text('id').notNull(),kind:text('kind').notNull(),data:text('data').notNull(),updated:text('updated').notNull()},t=>[primaryKey({columns:[t.owner,t.id]})]);
 export const serviceCache=pgTable('service_cache',{key:text('key').primaryKey(),data:text('data').notNull(),expires:text('expires').notNull()});
@@ -6,3 +6,7 @@ export const serviceGate=pgTable('service_gate',{name:text('name').primaryKey(),
 export const avatarFiles=pgTable('avatars',{key:text('key').primaryKey(),body:bytea('body').notNull()});
 
 export const progressionEvents=pgTable('progression_events',{owner:text('owner').notNull(),eventKey:text('event_key').notNull(),xp:integer('xp').notNull(),data:text('data').notNull(),createdAt:text('created_at').notNull(),notified:boolean('notified').notNull().default(true)},t=>[primaryKey({columns:[t.owner,t.eventKey]})]);
+
+export const notifications=pgTable('notifications',{owner:text('owner').notNull(),id:text('id').notNull(),data:text('data').notNull(),sentAt:bigint('sent_at',{mode:'number'}).notNull(),createdAt:bigint('created_at',{mode:'number'}).notNull(),push:boolean('push').notNull().default(false)},t=>[primaryKey({columns:[t.owner,t.id]})]);
+export const pushSubscriptions=pgTable('push_subscriptions',{id:text('id').primaryKey(),owner:text('owner').notNull(),endpoint:text('endpoint').notNull(),p256dh:text('p256dh').notNull(),auth:text('auth').notNull(),createdAt:bigint('created_at',{mode:'number'}).notNull(),updatedAt:bigint('updated_at',{mode:'number'}).notNull()});
+export const pushDeliveries=pgTable('push_deliveries',{subscriptionId:text('subscription_id').notNull().references(()=>pushSubscriptions.id,{onDelete:'cascade'}),owner:text('owner').notNull(),notificationId:text('notification_id').notNull(),attempts:integer('attempts').notNull().default(0),nextAt:bigint('next_at',{mode:'number'}).notNull().default(0),deliveredAt:bigint('delivered_at',{mode:'number'})},t=>[primaryKey({columns:[t.subscriptionId,t.notificationId]}),foreignKey({columns:[t.owner,t.notificationId],foreignColumns:[notifications.owner,notifications.id]}).onDelete('cascade')]);

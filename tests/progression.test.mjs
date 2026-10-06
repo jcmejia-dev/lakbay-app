@@ -9,7 +9,7 @@ import {PGlite} from '@electric-sql/pglite';
 const requireModule=createRequire(import.meta.url),root=fileURLToPath(new URL('../',import.meta.url));
 const resolve=Module._resolveFilename;
 Module._resolveFilename=function(request,...args){return resolve.call(this,request.startsWith('@/')?path.join(root,request.slice(2)):request,...args);};
-requireModule.extensions['.ts']=(module,file)=>module._compile(ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText,file);
+requireModule.extensions['.ts']=(module,file)=>module._compile(ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,esModuleInterop:true}}).outputText,file);
 const {levelThreshold,levelProgress,tierForXp}=requireModule('../lib/progression/levels.ts');
 const {rideXp}=requireModule('../lib/progression/xp.ts');
 const {TIERS}=requireModule('../lib/progression/config.ts');
@@ -32,7 +32,7 @@ test('XP excludes speed and acceleration, caps distance and requires pauses for 
 });
 test('actual PostgreSQL ledger is additive, isolated, persistent and replay-safe',async()=>{
   const db=new PGlite();const initial=fs.readFileSync(new URL('../db/postgres/001_initial.sql',import.meta.url),'utf8'),additive=fs.readFileSync(new URL('../db/postgres/002_progression.sql',import.meta.url),'utf8');
-  await db.exec(initial);await db.exec(additive);
+  await db.exec(initial);await db.exec(additive);await db.exec(fs.readFileSync(new URL('../db/postgres/003_notifications.sql',import.meta.url),'utf8'));
   requireModule.cache[requireModule.resolve('pg')]={exports:{Pool:class{on(){} query(sql,values){return db.query(sql,values);}async connect(){return {query:(sql,values)=>sql.includes('pg_advisory_xact_lock')?Promise.resolve({rows:[]}):db.query(sql,values),release(){}};}}}};
   const previous=process.env.DATABASE_URL;process.env.DATABASE_URL='postgresql://fixture.invalid/test';
   const {transaction}=requireModule('../lib/storage.ts'),{reconcileProgression}=requireModule('../lib/progression/repository.ts'),{claimUnlocks,awardOnce}=requireModule('../lib/progression/ledger.ts');

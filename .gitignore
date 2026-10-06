@@ -51,3 +51,6 @@ next-env.d.ts
 
 # TypeScript incremental build cache
 *.tsbuildinfo
+
+# Build-generated release metadata
+/lib/pwa/generated-release.json
