@@ -14,7 +14,7 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "node --env-file-if-exists=.env.local scripts/migrate-postgres.mjs",
     "db:import": "node --env-file-if-exists=.env.local scripts/import-d1.mjs",
-    "test": "npm run test:ride-systems && node --test tests/vercel-storage.test.mjs && npm run test:job3 && npm run test:notifications",
+    "test": "npm run test:ride-systems && node --test tests/vercel-storage.test.mjs && npm run test:job3 && npm run test:notifications && node --test tests/launch.test.mjs",
     "db:import-avatars": "node --env-file-if-exists=.env.local scripts/import-avatars.mjs",
     "typecheck": "tsc --noEmit",
     "test:job3": "node --test tests/progression.test.mjs tests/ridey.test.mjs",
