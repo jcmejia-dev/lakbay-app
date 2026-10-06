@@ -15,9 +15,9 @@ requireModule.extensions['.ts']=(module,file)=>module._compile(ts.transpileModul
 
 test('PostgreSQL adapter, migrations, auth and all data APIs preserve existing behavior',async()=>{
   const db=new PGlite(),schema=fs.readFileSync(new URL('../db/postgres/001_initial.sql',import.meta.url),'utf8');
-  await db.exec(schema);
+  await db.exec(schema);await db.exec(fs.readFileSync(new URL('../db/postgres/002_progression.sql',import.meta.url),'utf8'));
   // Exercise the real production adapter against PostgreSQL's actual parser/engine.
-  requireModule.cache[requireModule.resolve('pg')]={exports:{Pool:class {on(){} async query(sql,values){return db.query(sql,values);}}}};
+  requireModule.cache[requireModule.resolve('pg')]={exports:{Pool:class {on(){} async query(sql,values){return db.query(sql,values);} async connect(){return {query:(sql,values)=>sql.includes('pg_advisory_xact_lock')?Promise.resolve({rows:[]}):db.query(sql,values),release(){}};}}}};
   const previousEnv={...process.env},originalFetch=global.fetch;
   Object.assign(process.env,{DATABASE_URL:'postgresql://fixture.invalid/test',AUTH_SESSION_SECRET:'test-only-session-secret-not-a-production-secret',APP_BASE_URL:'https://lakbay.test',GOOGLE_CLIENT_ID:'fixture-client',GOOGLE_CLIENT_SECRET:'fixture-secret',RESEND_API_KEY:'fixture-mail',EMAIL_FROM:'Lakbay <fixture@example.test>'});
   const {database,avatars}=requireModule('../lib/storage.ts');

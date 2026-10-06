@@ -88,4 +88,5 @@ export async function syncCachedRecords(owner: string) {
     });
     writeDb.close();
   }
+  if(pending.length)window.dispatchEvent(new Event('lakbay:records-synced'));
 }

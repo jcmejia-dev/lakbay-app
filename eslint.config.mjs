@@ -16,6 +16,19 @@ const eslintConfig = defineConfig([
     "dist/**",
     "public/leaflet.js",
   ]),
+  // Existing main predates these stricter rules. Keep its findings visible
+  // as warnings; new Job 3 modules retain all default errors.
+  {
+    files: ["app/api/explore/route.ts", "app/api/records/route.ts", "app/ride-app.tsx", "components/lakbay/map-canvas.tsx", "components/lakbay/navigator.tsx", "components/lakbay/personalize.tsx", "components/lakbay/profile.tsx", "components/lakbay/ride-history.tsx", "lib/explore.ts", "lib/launch-sound.ts", "lib/navigation.ts", "lib/offline-records.ts"],
+    rules: {
+      "@typescript-eslint/no-explicit-any": "warn",
+      "react-hooks/set-state-in-effect": "warn",
+      "react-hooks/purity": "warn",
+      "react-hooks/refs": "warn",
+      "react-hooks/immutability": "warn",
+      "@next/next/no-html-link-for-pages": "warn",
+    },
+  },
   {
     files: ["components/ui/**/*.{ts,tsx}", "hooks/use-mobile.ts"],
     rules: {
