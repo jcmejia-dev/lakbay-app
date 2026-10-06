@@ -27,3 +27,19 @@ export async function enablePhoneAlerts(requestPermission:boolean){
   const saved=await fetch('/api/push/subscriptions',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(subscription)});if(!saved.ok)throw Error('Could not save this device. Retry Enable phone alerts when connected.');
 }
 export async function disablePhoneAlerts(){const registration=await navigator.serviceWorker.getRegistration('/');const subscription=await registration?.pushManager.getSubscription();if(!subscription)return;const response=await fetch('/api/push/subscriptions',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({endpoint:subscription.endpoint})});if(!response.ok)throw Error('Could not remove this device. Try again when connected.');await subscription.unsubscribe();}
+export type PhoneStatus={connected:boolean;message:string};
+export async function phoneStatus():Promise<PhoneStatus>{
+  if(!('Notification' in window)||!('PushManager' in window)||!('serviceWorker' in navigator))return {connected:false,message:'Phone alerts are not supported in this browser. Your inbox still works.'};
+  if(Notification.permission!=='granted')return {connected:false,message:Notification.permission==='denied'?'Notifications are blocked in browser/site settings.':'Enable phone alerts to connect this device.'};
+  const registration=await navigator.serviceWorker.getRegistration('/'),sub=await registration?.pushManager.getSubscription();
+  if(!sub)return {connected:false,message:'This phone has no push subscription. Tap Enable or Reconnect.'};
+  const response=await fetch('/api/push/device',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({endpoint:sub.endpoint})});
+  if(!response.ok)throw Error('Could not verify phone alerts. Check your connection and retry.');
+  const status=await response.json();return {connected:status.configured&&status.connected,message:!status.configured?'Phone alerts are not configured on the server.':status.connected?'This device is connected. Send a test alert to check phone delivery.':'This phone is not registered to your account. Tap Reconnect this device.'};
+}
+export async function testPhoneAlert(){
+  const registration=await navigator.serviceWorker.getRegistration('/'),sub=await registration?.pushManager.getSubscription();
+  if(!sub)throw Error('This phone is not connected. Tap Enable or Reconnect.');
+  const response=await fetch('/api/push/test',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({endpoint:sub.endpoint})});
+  const result=await response.json();if(!response.ok)throw Error(result.error||'Could not send the test alert.');
+}

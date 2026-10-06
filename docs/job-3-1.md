@@ -121,3 +121,16 @@ Run `npm run typecheck`, `npm run lint`, `npm test`, `npm run build`. Typecheck 
 - Built-app HTTP smoke checks passed for authenticated page/map/profile/Ridey rendering, existing record preservation, progression, unconfigured Ridey, weather, routing, newest-first inbox, mark-all-read, generated worker/release matching, unconfigured push and rejected unauthorized dispatch.
 - `.next/static` scan passed for private VAPID/cron/AI environment names and deliberately injected fake secret values. No private secret appeared in browser JavaScript.
 - No production database migration, real push delivery, physical-device validation or Vercel environment/deployment change was performed. Configure/deploy and run the device checks above to make closed-phone delivery live.
+
+## Checking a missing phone alert / delivery after each release
+
+The account-level `browser` preference alone does not prove this phone is registered. Notifications now checks permission, the local PushManager subscription, the authenticated owner's saved endpoint and server VAPID configuration. **Send test phone alert** sends fixed Lakbay content through the actual server/Web Push/worker path to this device only. A successful API reply means the push service accepted it; it does not guarantee display. Check the phone's notification shade. Tests use the same inbox ID and are capped at one per account per minute. Invalid/expired devices are removed and require Reconnect. There are no new database tables or migrations.
+
+For automatic delivery after publishing (instead of waiting for the daily 08:00 Philippine-time sweep), configure the repository's **Settings → Secrets and variables → Actions**:
+
+- Variable `LAKBAY_PRODUCTION_URL`: your stable HTTPS production Lakbay origin, not a preview URL.
+- Secret `CRON_SECRET`: exactly the existing server-only Vercel `CRON_SECRET` value. Never commit it or send it in chat.
+
+`.github/workflows/push-release.yml` runs on main pushes, waits up to twelve minutes for `/api/pwa/release` to report the exact deployed Git commit, and calls the existing authorized dispatch API. It does not deploy the app, alter Vercel settings, send previews, or send before a successful production release is visible. Identical application builds retain their content-based release ID. Failed deployments/configuration stop without pretending delivery succeeded. The existing daily sweep remains a fallback for maintenance/reminders and retries. GitHub Actions must be enabled and runner/account usage limits still apply. Configure these two settings once; after the first deployment you can also run the workflow manually against the current main branch.
+
+Server environment variables are unchanged. Production VAPID keys, the database migration, Notification permission and a saved subscription on this exact phone remain prerequisites. Account preference displays **Alerts saved**, rather than claiming **Connected**, when the device check fails. Reconnect this device, then use Send test phone alert. On Android, a native-app numeric badge like Instagram's is not guaranteed for an installed web app; active system notifications may produce a launcher dot instead.

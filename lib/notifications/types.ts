@@ -1,5 +1,5 @@
 export type InboxState={read:string[];browser:boolean};
-export type RideNotice={id:string;title:string;body:string;tab:string;time:number;kind:'ride'|'badge'|'service'|'update';version?:string;maintenanceStage?:'soon'|'due'};
+export type RideNotice={id:string;title:string;body:string;tab:string;time:number;kind:'ride'|'badge'|'service'|'update'|'test';version?:string;maintenanceStage?:'soon'|'due'};
 export const NOTICE_LIMIT=200;
 export function orderedNotices(items:RideNotice[]){return [...new Map(items.map(n=>[n.id,n])).values()].sort((a,b)=>b.time-a.time||a.id.localeCompare(b.id)).slice(0,NOTICE_LIMIT);}
 export function unreadCount(items:RideNotice[],read:string[]){const seen=new Set(read);return orderedNotices(items).filter(n=>!seen.has(n.id)).length;}
