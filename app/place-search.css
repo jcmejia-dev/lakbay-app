@@ -12,3 +12,6 @@
 .map-search-stack .weather-glance{max-width:100%}
 .profile-location-marker .rider-location-pin{isolation:isolate}
 .profile-location-marker .rider-pin-face{z-index:2;isolation:isolate}
+
+/* Native image marker: show the rider's actual avatar instead of a blank pin. */
+.leaflet-container img.rider-photo-marker{display:block!important;object-fit:cover;border:3px solid #fff!important;border-radius:50%!important;background:#f4f7f1!important;box-shadow:0 3px 12px #102b2155;max-width:none!important;max-height:none!important;padding:0!important}
