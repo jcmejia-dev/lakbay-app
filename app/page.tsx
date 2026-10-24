@@ -7,7 +7,7 @@ import RideApp from './ride-app';
 
 export const dynamic='force-dynamic';
 
-const STARTUP_TIMEOUT_MS=6500;
+const STARTUP_TIMEOUT_MS=3500;
 class StartupTimeout extends Error{}
 function withStartupTimeout<T>(promise:Promise<T>,label:string):Promise<T>{
   return new Promise<T>((resolve,reject)=>{
@@ -16,7 +16,7 @@ function withStartupTimeout<T>(promise:Promise<T>,label:string):Promise<T>{
   });
 }
 function Unavailable(){
-  return <div className="auth-page"><section className="auth-form-card"><h1>Lakbay took too long to connect.</h1><p>The app stopped waiting instead of leaving you stuck on the opening screen. Retry the connection now.</p><Link className="dark-button auth-submit" href="/?retry=1">Retry</Link></section></div>;
+  return <div className="auth-page"><section className="auth-form-card"><h1>Lakbay cannot reach your account right now.</h1><p>Your data has not been changed. The connection failed or timed out, so Lakbay stopped waiting instead of freezing on startup.</p><Link className="dark-button auth-submit" href="/?retry=1">Try again</Link></section></div>;
 }
 
 export default async function Page({searchParams}:{searchParams:Promise<{auth_error?:string}>}){
