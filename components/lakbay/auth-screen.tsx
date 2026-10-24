@@ -20,11 +20,11 @@ export default function AuthScreen({user,oauthError}:{user?:SignedIn|null;oauthE
   async function login(e:React.FormEvent){e.preventDefault();setAuthBusy(true);setError('');setNotice('');try{await post('/api/auth/email/password',{email,password});window.location.replace('/');}catch(cause){setError(cause instanceof Error?cause.message:'Could not sign in.');setAuthBusy(false);}}
   async function requestCode(e:React.FormEvent,purpose:CodePurpose){e.preventDefault();setAuthBusy(true);setError('');setNotice('');try{const result=await post('/api/auth/email/request',{email,purpose});setStep(purpose==='signup'?'verify-signup':'verify-reset');setNotice(result.message||'Check your email for a six-digit code.');}catch(cause){setError(cause instanceof Error?cause.message:'Could not send a code.');}finally{setAuthBusy(false);}}
   async function verify(e:React.FormEvent,purpose:CodePurpose){e.preventDefault();setAuthBusy(true);setError('');setNotice('');try{await post('/api/auth/email/verify',{email,code,purpose,password:purpose==='signup'?password:newPassword,name});window.location.replace('/');}catch(cause){setError(cause instanceof Error?cause.message:'Could not verify this code.');setAuthBusy(false);}}
-  async function registerProfile(e:React.FormEvent){e.preventDefault();setBusy(true);setError('');try{const response=await fetch('/api/rider',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({displayName:name,homeTown:town})});const result:{error?:string}=await response.json();if(!response.ok)throw Error(result.error);setReady(true);window.location.replace('/');}catch(cause){setError(cause instanceof Error?cause.message:'Could not create your profile.');setBusy(false);}}
+  async function registerProfile(e:React.FormEvent){e.preventDefault();setBusy(true);setError('');try{const response=await fetch('/api/rider',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({displayName:name,homeTown:town,mapAvatar:'rider',onboardingComplete:false})});const result:{error?:string}=await response.json();if(!response.ok)throw Error(result.error);setReady(true);window.location.replace('/');}catch(cause){setError(cause instanceof Error?cause.message:'Could not create your profile.');setBusy(false);}}
   function changeTab(value:string){setTab(value);setStep('form');setError('');setNotice('');setCode('');setPassword('');}
   function beginForgot(){setStep('forgot-email');setError('');setNotice('');setPassword('');}
 
-  if(ready)return <WheelLoader value={55} label="Profile created. Opening your map…"/>;
+  if(ready)return <WheelLoader value={55} label="Profile created. Setting up your Lakbay identity…"/>;
 
   return <div className="auth-page">
     <div className="auth-brand"><Brand/></div>
