@@ -6,7 +6,7 @@ import {createRequire} from 'node:module';
 const loadModule=createRequire(import.meta.url);
 // Test the actual TypeScript modules with the compiler already installed by the app.
 loadModule.extensions['.ts']=(module,file)=>module._compile(ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText,file);
-const {fuelEstimate,refuelTotal}=loadModule('../lib/fuel.ts');
+const {fuelEstimate,refuelTotal,rideFuelCost}=loadModule('../lib/fuel.ts');
 const {ArrivalGate,arrivalCandidate}=loadModule('../lib/arrival.ts');
 const {recommendFuel,visiblePois}=loadModule('../lib/route-pois.ts');
 const {ride,profile}=loadModule('../lib/record-schemas.ts');
@@ -129,4 +129,12 @@ test('refueling adds liters or converts pesos and validates tank limits',()=>{
  assert.deepEqual(refuelTotal(.5,150,'pesos',60,5),{added:2.5,total:3});
  assert.deepEqual(refuelTotal(0,5,'liters',0,5),{added:5,total:5});
  for(const args of [[1,0,'liters',0,5],[1,-1,'liters',0,5],[1,NaN,'liters',0,5],[NaN,2,'liters',0,5],[1,100,'pesos',0,5],[1,100,'pesos',-1,5],[4,2,'liters',0,5]])assert.equal(refuelTotal(...args),null);
+});
+
+test('peso ride cost uses traveled kilometers, economy and pump price',()=>{
+ const cost=rideFuelCost(64,55,84);
+ assert.ok(Math.abs(cost.fuelCost-97.74545454545)<.000001);
+ assert.ok(Math.abs(cost.litersUsed-64/55)<.000001);
+ assert.equal(rideFuelCost(0,55,84).fuelCost,0);
+ assert.equal(rideFuelCost(64,55).fuelCost,null);
 });
