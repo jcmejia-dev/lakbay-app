@@ -47,7 +47,6 @@ export default function AppBehavior(){
     let lastFuelSeverity=0;
     let lastRiding=false;
 
-    // Keep one same-document guard behind Lakbay so Android/PWA Back can be handled safely.
     history.replaceState({...history.state,lakbayRoot:true},'');
     history.pushState({lakbayGuard:true,tab:lastTab||'Ride'},'');
 
@@ -67,8 +66,9 @@ export default function AppBehavior(){
     }
 
     function checkFuel(){
-      const rideButton=document.querySelector<HTMLElement>('.dock-main');
-      const riding=!!rideButton&&/pause/i.test(rideButton.textContent||'');
+      const guidance=document.querySelector<HTMLElement>('.route-guidance');
+      const guidanceText=guidance?.textContent||'';
+      const riding=!!guidance&&!/route preview/i.test(guidanceText);
       const fuel=document.querySelector<HTMLElement>('.fuel-glance');
       const text=fuel?.textContent?.trim()||'';
       const severity=fuelSeverity(text);
@@ -103,13 +103,10 @@ export default function AppBehavior(){
     function onPopState(event:PopStateEvent){
       if(leaving)return;
       const state=event.state||{};
-
-      // Back closes the current Lakbay sheet/dialog before doing anything else.
       if(closeTopDialog()){
         dialogCount=Math.max(0,dialogCount-1);
         return;
       }
-
       if(state.lakbayView||state.lakbayGuard||state.lakbayOverlay){
         replaying=true;
         goToMainTab(state.tab||'Ride');
@@ -118,7 +115,6 @@ export default function AppBehavior(){
         requestAnimationFrame(()=>{replaying=false;syncHistory();});
         return;
       }
-
       if(state.lakbayRoot){
         const now=Date.now();
         if(now-lastExitBack<=EXIT_WINDOW_MS){
