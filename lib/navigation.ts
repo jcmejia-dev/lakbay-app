@@ -4,7 +4,7 @@ export type RoadStep={name:string;ref?:string;distance:number;duration:number;ma
 export type RoadRoute={coordinates:[number,number][];distance:number;duration:number;steps:RoadStep[];snaps:{location:[number,number];distance:number}[];createdAt:number};
 export type SavedPlace={id:string;name:string;lat:number;lng:number;label?:string;category:'destination'|'fuel'|'shop';savedAt:number};
 export type SavedTrip={id:string;name:string;from:Location;to:Location;route:RoadRoute;savedAt:number};
-export type Preferences={theme:'forest'|'ocean'|'night';mapStyle:'standard'|'quiet'|'night';routeColor:'blue'|'purple'|'orange';fuel:boolean;shops:boolean;follow:boolean;onboarded:boolean};
+export type Preferences={theme:'forest'|'ocean'|'night';mapStyle:'standard'|'quiet'|'night'|'terrain';routeColor:'blue'|'purple'|'orange';fuel:boolean;shops:boolean;follow:boolean;onboarded:boolean};
 export const defaults:Preferences={theme:'forest',mapStyle:'standard',routeColor:'blue',fuel:true,shops:true,follow:true,onboarded:false};
 export const koronadal:Location={lat:6.497,lng:124.847,name:'Koronadal city centre'};
 export function meters(a:Location,b:Location){const d=Math.PI/180,x=(b.lng-a.lng)*d*Math.cos((a.lat+b.lat)/2*d),y=(b.lat-a.lat)*d;return Math.sqrt(x*x+y*y)*6371000;}
