@@ -1,6 +1,22 @@
-import {fuelEstimate,rideFuelCost,type Garage} from '@/lib/fuel';
+'use client';
+import {useState} from 'react';
+import {fuelEstimate,rideFuelCost,refuelTotal,type Vehicle,type Garage} from '@/lib/fuel';
 import type {Poi} from '@/lib/navigation';
 function peso(value:number){return value.toLocaleString('en-PH',{style:'currency',currency:'PHP'});}
+function RefuelEntry({vehicle,current,onFuel}:{vehicle:Vehicle;current:number|null;onFuel:(value:string)=>void}){
+  const [unit,setUnit]=useState<'liters'|'pesos'>('liters'),[amount,setAmount]=useState(''),[price,setPrice]=useState(vehicle.fuelPricePerLiter?.toString()||''),[message,setMessage]=useState('');
+  const result=current===null?null:refuelTotal(current,Number(amount),unit,Number(price),vehicle.tankLiters);
+  return <div className="refuel-entry"><h3>Add fuel</h3><p className="subtle">Enter what you added at the pump. This adds to your current fuel estimate.</p>
+    <label className="field-label">Enter fuel by<select value={unit} onChange={e=>{setUnit(e.target.value as 'liters'|'pesos');setMessage('');}}><option value="liters">Liters added</option><option value="pesos">Amount paid (₱)</option></select></label>
+    <label className="field-label">{unit==='liters'?'Fuel added (L)':'Amount paid (₱)'}<input type="number" inputMode="decimal" min="0.01" step="0.01" value={amount} placeholder={unit==='liters'?'e.g. 2.5':'e.g. 150'} onChange={e=>{setAmount(e.target.value);setMessage('');}}/></label>
+    {unit==='pesos'&&<label className="field-label">Pump price (₱/L)<input type="number" inputMode="decimal" min="0.01" step="0.01" value={price} placeholder="e.g. 60.50" onChange={e=>{setPrice(e.target.value);setMessage('');}}/></label>}
+    {current===null&&<p className="subtle">Enter your current fuel estimate above first. Use 0 if the tank is empty.</p>}
+    {result&&amount!==''&&<p className="subtle">Adding {result.added.toFixed(2)} L → estimated total {result.total.toFixed(2)} L</p>}
+    {current!==null&&amount!==''&&!result&&<p role="alert" className="inline-error">Enter a positive amount{unit==='pesos'?' and pump price':''}{vehicle.tankLiters?`; the total must not exceed ${vehicle.tankLiters} L`:'.'}</p>}
+    <button type="button" className="dark-button" disabled={!result} onClick={()=>{if(!result)return;onFuel(String(Math.round(result.total*10000)/10000));setAmount('');setMessage(`Added ${result.added.toFixed(2)} L. Current estimate: ${result.total.toFixed(2)} L.`);}}>Add fuel to estimate</button>
+    <p role="status" className="subtle">{message}</p>
+  </div>;
+}
 export default function FuelPanel({hasRoute,garage,onSelect,liters,onFuel,distanceKm,remainingLiters,recommendations,onStation,onGarage}:{hasRoute:boolean;garage:Garage;onSelect:(id:string)=>void;liters:string;onFuel:(value:string)=>void;distanceKm:number;remainingLiters:number|null;recommendations:Poi[];onStation:(p:Poi)=>void;onGarage:()=>void}) {
   const vehicle=garage.vehicles.find(v=>v.id===garage.activeVehicleId);
   const estimate=vehicle&&remainingLiters!==null?fuelEstimate(remainingLiters,vehicle.kmPerLiter,distanceKm,vehicle.tankLiters):null;
@@ -9,6 +25,7 @@ export default function FuelPanel({hasRoute,garage,onSelect,liters,onFuel,distan
     <label className="field-label">Active vehicle<select value={garage.activeVehicleId||''} onChange={e=>onSelect(e.target.value)}><option value="" disabled>Select a vehicle</option>{garage.vehicles.map(v=><option key={v.id} value={v.id}>{v.name} · {v.kmPerLiter} km/L</option>)}</select></label>
     <label className="field-label">Estimated current fuel (L)<input type="number" min="0" max={vehicle?.tankLiters||500} step="0.1" value={liters} onChange={e=>onFuel(e.target.value)} placeholder="Enter your estimate"/></label>
     <p className="subtle">Entered by you. Lakbay cannot read your fuel tank. While recording, the estimate subtracts fuel used since your last entry.</p>
+    {vehicle&&<RefuelEntry key={vehicle.id} vehicle={vehicle} current={remainingLiters} onFuel={onFuel}/>}
     {hasRoute&&vehicle&&cost&&<dl className="fuel-metrics"><div><dt>Trip distance</dt><dd>{distanceKm.toFixed(1)} km</dd></div><div><dt>Estimated fuel burned</dt><dd>~{cost.litersUsed.toFixed(2)} L</dd></div><div><dt>Fuel economy</dt><dd>{vehicle.kmPerLiter} km/L</dd></div><div><dt>Estimated fuel cost</dt><dd>{cost.fuelCost!==null?peso(cost.fuelCost):'Add ₱/L in Garage'}</dd></div></dl>}
     {liters!==''&&!estimate&&<p role="alert" className="inline-error">Check the fuel amount, tank capacity and selected vehicle.</p>}
     {estimate&&<>{hasRoute&&<p className="fuel-status">{estimate.status}</p>}<dl className="fuel-metrics">{hasRoute&&<div><dt>Route remaining</dt><dd>{distanceKm.toFixed(1)} km</dd></div>}<div><dt>Available range</dt><dd>~{estimate.range.toFixed(1)} km</dd></div>{hasRoute&&<div><dt>Fuel needed</dt><dd>~{estimate.needed.toFixed(2)} L</dd></div>}<div><dt>Current estimate</dt><dd>~{remainingLiters?.toFixed(2)} L</dd></div>{hasRoute&&<div><dt>After arrival</dt><dd>{estimate.remaining<0?`Short by ~${(-estimate.remaining).toFixed(2)} L`:`~${estimate.remaining.toFixed(2)} L`}</dd></div>}{hasRoute&&<div><dt>Safety reserve</dt><dd>~{estimate.reserve.toFixed(2)} L</dd></div>}</dl><p className="subtle">Estimates at {vehicle?.kmPerLiter} km/L. Traffic, terrain, load and riding style change real fuel use and cost.</p>

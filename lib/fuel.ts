@@ -11,3 +11,11 @@ export function rideFuelCost(distanceKm:number,economy:number,fuelPricePerLiter?
   const fuelCost=fuelPricePerLiter!==undefined&&Number.isFinite(fuelPricePerLiter)&&fuelPricePerLiter>0?litersUsed*fuelPricePerLiter:null;
   return {litersUsed,fuelCost};
 }
+
+export function refuelTotal(current:number,amount:number,unit:'liters'|'pesos',price:number,tankLiters?:number){
+  if(!Number.isFinite(current)||current<0||!Number.isFinite(amount)||amount<=0)return null;
+  if(unit==='pesos'&&(!Number.isFinite(price)||price<=0))return null;
+  const added=unit==='pesos'?amount/price:amount,total=current+added;
+  if(!Number.isFinite(total)||(tankLiters!==undefined&&total>tankLiters))return null;
+  return {added,total};
+}

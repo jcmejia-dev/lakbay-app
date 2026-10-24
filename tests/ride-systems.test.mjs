@@ -6,7 +6,7 @@ import {createRequire} from 'node:module';
 const loadModule=createRequire(import.meta.url);
 // Test the actual TypeScript modules with the compiler already installed by the app.
 loadModule.extensions['.ts']=(module,file)=>module._compile(ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText,file);
-const {fuelEstimate}=loadModule('../lib/fuel.ts');
+const {fuelEstimate,refuelTotal}=loadModule('../lib/fuel.ts');
 const {ArrivalGate,arrivalCandidate}=loadModule('../lib/arrival.ts');
 const {recommendFuel,visiblePois}=loadModule('../lib/route-pois.ts');
 const {ride,profile}=loadModule('../lib/record-schemas.ts');
@@ -122,4 +122,11 @@ test('weather conditions select distinct lightweight icons, including night and 
  assert.match(renderToStaticMarkup(WeatherIcon({code:0,night:true})),/weather-moon/);
  assert.match(renderToStaticMarkup(WeatherIcon({code:95})),/weather-lightning/);
  const css=fs.readFileSync(new URL('../app/globals.css',import.meta.url),'utf8');assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
+});
+
+test('refueling adds liters or converts pesos and validates tank limits',()=>{
+ assert.deepEqual(refuelTotal(1,2,'liters',0,5),{added:2,total:3});
+ assert.deepEqual(refuelTotal(.5,150,'pesos',60,5),{added:2.5,total:3});
+ assert.deepEqual(refuelTotal(0,5,'liters',0,5),{added:5,total:5});
+ for(const args of [[1,0,'liters',0,5],[1,-1,'liters',0,5],[1,NaN,'liters',0,5],[NaN,2,'liters',0,5],[1,100,'pesos',0,5],[1,100,'pesos',-1,5],[4,2,'liters',0,5]])assert.equal(refuelTotal(...args),null);
 });
