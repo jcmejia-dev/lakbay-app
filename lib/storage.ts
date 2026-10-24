@@ -5,7 +5,7 @@ let pool:Pool|undefined;
 export function database(){
   if(!process.env.DATABASE_URL)throw Error('DATABASE_URL is not configured');
   if(!pool){
-    pool=new Pool({connectionString:process.env.DATABASE_URL,max:3,idleTimeoutMillis:10000,connectionTimeoutMillis:10000,allowExitOnIdle:true});
+    pool=new Pool({connectionString:process.env.DATABASE_URL,max:3,idleTimeoutMillis:10000,connectionTimeoutMillis:3000,query_timeout:5000,statement_timeout:5000,allowExitOnIdle:true});
     pool.on('error',()=>console.error('An idle database connection failed.'));
   }
   return new SqlDatabase((sql,values)=>pool!.query(sql,values));
