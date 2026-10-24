@@ -1,7 +1,10 @@
-import Brand from '@/components/lakbay/brand';
-
-// Stream the Lakbay title while account/Neon data is loading, rather than
-// leaving the browser waiting for the entire authenticated page response.
 export default function Loading() {
-  return <div className="launch-wait" role="status" aria-label="Opening Lakbay"><Brand/></div>;
+  return (
+    <div className="launch-wait" role="status" aria-live="polite" aria-label="Loading Lakbay">
+      <div style={{textAlign:'center',padding:'32px'}}>
+        <div style={{fontWeight:800,fontSize:'2rem',letterSpacing:'-0.04em'}}>lakbay<span>.</span></div>
+        <p style={{marginTop:'10px',opacity:.7}}>Loading your ride...</p>
+      </div>
+    </div>
+  );
 }
