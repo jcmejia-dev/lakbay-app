@@ -5,6 +5,9 @@ import {avatarUrl,profileInitials,type RiderProfile} from '@/lib/profile';
 
 export function AvatarFallback({profile,marker=false}:{profile:RiderProfile;marker?:boolean}) {
   if(marker)return profile.mapAvatar==='bike'?<Bike size={23}/>:profile.mapAvatar==='rider'||profile.mapAvatar==='photo'?<UserRound size={23}/>:<Navigation size={23}/>;
+  if(profile.mapAvatar==='bike')return <Bike size={28}/>;
+  if(profile.mapAvatar==='rider')return <UserRound size={28}/>;
+  if(profile.mapAvatar==='arrow')return <Navigation size={28}/>;
   return <span>{profileInitials(profile.displayName)}</span>;
 }
 export default function ProfileAvatar({profile,marker=false}:{profile:RiderProfile;marker?:boolean}) {
